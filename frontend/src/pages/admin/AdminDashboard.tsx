@@ -1,92 +1,89 @@
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Users, ShoppingBag, Heart, MessageCircle, TrendingUp, Plus, Eye, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { dressService } from "@/services/dressService";
+import { userService } from "@/services/userService";
 
 const AdminDashboard = () => {
-  const stats = [
+  const [loading, setLoading] = useState(true);
+  const [stats, setStats] = useState({
+    totalUsers: 0,
+    totalDresses: 0,
+    totalLikes: 0,
+    totalRequests: 0
+  });
+  const [topDresses, setTopDresses] = useState<any[]>([]);
+  const [recentUsers, setRecentUsers] = useState<any[]>([]);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    loadDashboardData();
+  }, []);
+
+  const loadDashboardData = async () => {
+    try {
+      setLoading(true);
+      
+      // Load statistics
+      const [dressStats, userStats, recentUsersData] = await Promise.all([
+        dressService.getDressStatistics(),
+        userService.getUserStatistics(),
+        userService.getRecentUsers(3)
+      ]);
+
+      setStats({
+        totalUsers: userStats.totalUsers,
+        totalDresses: dressStats.totalDresses,
+        totalLikes: dressStats.totalLikes,
+        totalRequests: dressStats.totalRequests
+      });
+
+      setTopDresses(dressStats.topDresses);
+      setRecentUsers(recentUsersData);
+    } catch (error) {
+      console.error('Error loading dashboard data:', error);
+      toast({
+        variant: "destructive",
+        title: "Error loading dashboard",
+        description: "Could not load dashboard data. Please try again."
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const statsData = [
     {
       title: "Total Users",
-      value: "1,234",
+      value: stats.totalUsers.toString(),
       change: "+12%",
       icon: Users,
       color: "text-blue-500",
     },
     {
       title: "Total Dresses",
-      value: "89",
+      value: stats.totalDresses.toString(),
       change: "+5%",
       icon: ShoppingBag,
       color: "text-green-500",
     },
     {
       title: "Total Likes",
-      value: "3,456",
+      value: stats.totalLikes.toString(),
       change: "+18%",
       icon: Heart,
       color: "text-pink-500",
     },
     {
-      title: "Total Comments",
-      value: "567",
+      title: "Total Requests",
+      value: stats.totalRequests.toString(),
       change: "+23%",
       icon: MessageCircle,
       color: "text-purple-500",
-    },
-  ];
-
-  const topDresses = [
-    {
-      id: 1,
-      name: "Classic Little Black Dress",
-      image: "https://images.unsplash.com/photo-1539008835657-9e8e9680c956?w=100&h=100&fit=crop",
-      requests: 67,
-      likes: 89,
-      status: "Active",
-    },
-    {
-      id: 2,
-      name: "Party Cocktail Dress",
-      image: "https://images.unsplash.com/photo-1566479179817-c0e5deb2e22c?w=100&h=100&fit=crop",
-      requests: 45,
-      likes: 67,
-      status: "Active",
-    },
-    {
-      id: 3,
-      name: "Elegant Evening Gown",
-      image: "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=100&h=100&fit=crop",
-      requests: 24,
-      likes: 45,
-      status: "Active",
-    },
-  ];
-
-  const recentUsers = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      email: "sarah@example.com",
-      requests: 3,
-      likes: 12,
-      joinDate: "2024-01-15",
-    },
-    {
-      id: 2,
-      name: "Emily Chen",
-      email: "emily@example.com",
-      requests: 5,
-      likes: 8,
-      joinDate: "2024-01-14",
-    },
-    {
-      id: 3,
-      name: "Maria Rodriguez",
-      email: "maria@example.com",
-      requests: 2,
-      likes: 15,
-      joinDate: "2024-01-13",
     },
   ];
 
@@ -96,6 +93,14 @@ const AdminDashboard = () => {
     { title: "Manage Requests", icon: ShoppingBag, href: "/admin/requests", color: "btn-hero-outline" },
     { title: "Analytics", icon: TrendingUp, href: "/admin/analytics", color: "btn-hero-outline" },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8">
@@ -120,7 +125,7 @@ const AdminDashboard = () => {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat, index) => {
+          {statsData.map((stat, index) => {
             const Icon = stat.icon;
             return (
               <Card key={index} className="card-premium">
@@ -178,23 +183,30 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {topDresses.map((dress) => (
-                  <div key={dress.id} className="flex items-center space-x-4 p-3 bg-muted/50 rounded-lg">
-                    <img
-                      src={dress.image}
-                      alt={dress.name}
-                      className="w-12 h-12 object-cover rounded-lg"
-                    />
-                    <div className="flex-1">
-                      <h4 className="font-semibold">{dress.name}</h4>
-                      <div className="flex items-center space-x-4 text-sm text-muted-foreground">
-                        <span>{dress.requests} requests</span>
-                        <span>{dress.likes} likes</span>
+                {topDresses.length > 0 ? (
+                  topDresses.map((dress) => (
+                    <div key={dress.id} className="flex items-center space-x-4 p-3 bg-muted/50 rounded-lg">
+                      <img
+                        src={dress.images?.[0] || "https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?w=100&h=100&fit=crop"}
+                        alt={dress.name}
+                        className="w-12 h-12 object-cover rounded-lg"
+                      />
+                      <div className="flex-1">
+                        <h4 className="font-semibold">{dress.name}</h4>
+                        <div className="flex items-center space-x-4 text-sm text-muted-foreground">
+                          <span>{dress.request_count || 0} requests</span>
+                          <span>{dress.like_count || 0} likes</span>
+                        </div>
                       </div>
+                      <Badge variant="secondary">{dress.status}</Badge>
                     </div>
-                    <Badge variant="secondary">{dress.status}</Badge>
+                  ))
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    <ShoppingBag className="w-12 h-12 mx-auto mb-4" />
+                    <p>No dresses found. Add some dresses to get started!</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
@@ -214,22 +226,35 @@ const AdminDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {recentUsers.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
-                    <div>
-                      <h4 className="font-semibold">{user.name}</h4>
-                      <p className="text-sm text-muted-foreground">{user.email}</p>
-                      <div className="flex items-center space-x-4 text-xs text-muted-foreground mt-1">
-                        <span>{user.requests} requests</span>
-                        <span>{user.likes} likes</span>
+                {recentUsers.length > 0 ? (
+                  recentUsers.map((user) => (
+                    <div key={user.id} className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                      <div>
+                        <h4 className="font-semibold">
+                          {user.first_name} {user.last_name}
+                        </h4>
+                        <p className="text-sm text-muted-foreground">
+                          Role: {user.role}
+                        </p>
+                        <div className="flex items-center space-x-4 text-xs text-muted-foreground mt-1">
+                          <span>{user.requestsMade || 0} requests</span>
+                          <span>{user.likesCount || 0} likes</span>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="text-sm text-muted-foreground">Joined</p>
+                        <p className="text-sm font-medium">
+                          {new Date(user.created_at).toLocaleDateString()}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm text-muted-foreground">Joined</p>
-                      <p className="text-sm font-medium">{user.joinDate}</p>
-                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-muted-foreground py-8">
+                    <Users className="w-12 h-12 mx-auto mb-4" />
+                    <p>No users found yet.</p>
                   </div>
-                ))}
+                )}
               </div>
             </CardContent>
           </Card>
