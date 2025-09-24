@@ -14,6 +14,185 @@ export type Database = {
   }
   public: {
     Tables: {
+      dress_comments: {
+        Row: {
+          comment: string
+          created_at: string
+          dress_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          comment: string
+          created_at?: string
+          dress_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string
+          created_at?: string
+          dress_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dress_comments_dress_id_fkey"
+            columns: ["dress_id"]
+            isOneToOne: false
+            referencedRelation: "dresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dress_comments_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      dress_likes: {
+        Row: {
+          created_at: string
+          dress_id: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dress_id: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dress_id?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dress_likes_dress_id_fkey"
+            columns: ["dress_id"]
+            isOneToOne: false
+            referencedRelation: "dresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dress_likes_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      dress_requests: {
+        Row: {
+          created_at: string
+          dress_id: string
+          id: string
+          message: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          dress_id: string
+          id?: string
+          message?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          dress_id?: string
+          id?: string
+          message?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dress_requests_dress_id_fkey"
+            columns: ["dress_id"]
+            isOneToOne: false
+            referencedRelation: "dresses"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dress_requests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
+      dresses: {
+        Row: {
+          category: string
+          colors: string[] | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          features: string[] | null
+          id: string
+          images: string[] | null
+          like_count: number | null
+          name: string
+          price: number
+          request_count: number | null
+          sizes: string[] | null
+          status: string | null
+          updated_at: string
+        }
+        Insert: {
+          category: string
+          colors?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          images?: string[] | null
+          like_count?: number | null
+          name: string
+          price: number
+          request_count?: number | null
+          sizes?: string[] | null
+          status?: string | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string
+          colors?: string[] | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          features?: string[] | null
+          id?: string
+          images?: string[] | null
+          like_count?: number | null
+          name?: string
+          price?: number
+          request_count?: number | null
+          sizes?: string[] | null
+          status?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dresses_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
