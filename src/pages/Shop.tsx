@@ -10,8 +10,8 @@ import { Badge } from "@/components/ui/badge";
 const Shop = () => {
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedSize, setSelectedSize] = useState("");
-  const [selectedColor, setSelectedColor] = useState("");
+  const [selectedSize, setSelectedSize] = useState("all-sizes");
+  const [selectedColor, setSelectedColor] = useState("all-colors");
   const [sortBy, setSortBy] = useState("popularity");
 
   const dresses = [
@@ -95,8 +95,8 @@ const Shop = () => {
 
   const filteredDresses = dresses.filter((dress) => {
     const matchesSearch = dress.name.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesSize = !selectedSize || dress.sizes.includes(selectedSize);
-    const matchesColor = !selectedColor || dress.colors.includes(selectedColor);
+    const matchesSize = selectedSize === "all-sizes" || dress.sizes.includes(selectedSize);
+    const matchesColor = selectedColor === "all-colors" || dress.colors.includes(selectedColor);
     return matchesSearch && matchesSize && matchesColor;
   });
 
@@ -151,7 +151,7 @@ const Shop = () => {
                   <SelectValue placeholder="All Sizes" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Sizes</SelectItem>
+                  <SelectItem value="all-sizes">All Sizes</SelectItem>
                   {sizes.map((size) => (
                     <SelectItem key={size} value={size}>{size}</SelectItem>
                   ))}
@@ -166,7 +166,7 @@ const Shop = () => {
                   <SelectValue placeholder="All Colors" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Colors</SelectItem>
+                  <SelectItem value="all-colors">All Colors</SelectItem>
                   {colors.map((color) => (
                     <SelectItem key={color} value={color}>{color}</SelectItem>
                   ))}
@@ -218,13 +218,13 @@ const Shop = () => {
           
           {/* Active Filters */}
           <div className="flex items-center space-x-2">
-            {selectedSize && (
-              <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedSize("")}>
+            {selectedSize !== "all-sizes" && (
+              <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedSize("all-sizes")}>
                 Size: {selectedSize} ×
               </Badge>
             )}
-            {selectedColor && (
-              <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedColor("")}>
+            {selectedColor !== "all-colors" && (
+              <Badge variant="secondary" className="cursor-pointer" onClick={() => setSelectedColor("all-colors")}>
                 Color: {selectedColor} ×
               </Badge>
             )}
@@ -338,8 +338,8 @@ const Shop = () => {
             <Button 
               onClick={() => {
                 setSearchQuery("");
-                setSelectedSize("");
-                setSelectedColor("");
+                setSelectedSize("all-sizes");
+                setSelectedColor("all-colors");
               }}
               className="btn-hero"
             >
