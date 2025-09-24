@@ -2,95 +2,87 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Premium E-commerce Design System - Narasimha's Shopify */
 
 @layer base {
   :root {
+    /* Base Colors - Pure contrast */
     --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-
+    --foreground: 0 0% 0%;
+    
+    /* Card System */
     --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-
+    --card-foreground: 0 0% 0%;
+    
+    /* Popover System */
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
-
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
-
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --popover-foreground: 0 0% 0%;
+    
+    /* Premium Brand Colors - Neon Pink to Purple */
+    --primary: 320 100% 50%; /* Neon Pink #ff0080 */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 320 100% 70%;
+    
+    --secondary: 270 100% 50%; /* Electric Purple #8000ff */
+    --secondary-foreground: 0 0% 100%;
+    --secondary-glow: 270 100% 70%;
+    
+    /* Neutral Tones */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 40%;
+    
+    --accent: 0 0% 96%;
+    --accent-foreground: 0 0% 10%;
+    
+    /* Interactive States */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    
+    /* Border & Input */
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 320 100% 50%;
+    
+    /* Design System Tokens */
+    --radius: 12px;
+    
+    /* Premium Gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--secondary)));
+    --gradient-primary-hover: linear-gradient(135deg, hsl(var(--primary-glow)), hsl(var(--secondary-glow)));
+    --gradient-subtle: linear-gradient(135deg, hsl(var(--background)), hsl(var(--muted)));
+    --gradient-dark: linear-gradient(135deg, hsl(0 0% 5%), hsl(0 0% 15%));
+    
+    /* Premium Shadows */
+    --shadow-premium: 0 10px 40px -10px hsl(var(--primary) / 0.3);
+    --shadow-glow: 0 0 40px hsl(var(--primary) / 0.4);
+    --shadow-card: 0 4px 20px -4px hsl(0 0% 0% / 0.1);
+    --shadow-elevated: 0 20px 60px -10px hsl(0 0% 0% / 0.2);
+    
+    /* Animations */
+    --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   }
-
+  
   .dark {
-    --background: 222.2 84% 4.9%;
-    --foreground: 210 40% 98%;
-
-    --card: 222.2 84% 4.9%;
-    --card-foreground: 210 40% 98%;
-
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
-
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 210 40% 98%;
-
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --background: 0 0% 5%;
+    --foreground: 0 0% 95%;
+    
+    --card: 0 0% 8%;
+    --card-foreground: 0 0% 95%;
+    
+    --popover: 0 0% 8%;
+    --popover-foreground: 0 0% 95%;
+    
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+    
+    --accent: 0 0% 15%;
+    --accent-foreground: 0 0% 90%;
+    
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    
+    --gradient-subtle: linear-gradient(135deg, hsl(var(--background)), hsl(var(--muted)));
   }
 }
 
@@ -98,8 +90,128 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
+  
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-montserrat;
+    font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+@layer components {
+  /* Hero Button Variants */
+  .btn-hero {
+    @apply bg-gradient-to-r from-primary to-secondary text-white font-semibold px-8 py-4 rounded-xl;
+    @apply transform hover:scale-105 transition-all duration-300;
+    @apply border-0 outline-none focus:ring-2 focus:ring-primary/50;
+    box-shadow: var(--shadow-premium);
+  }
+  
+  .btn-hero:hover {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  .btn-hero-outline {
+    @apply border-2 border-transparent bg-gradient-to-r from-primary to-secondary p-[2px] rounded-xl;
+    @apply transition-all duration-300;
+    box-shadow: var(--shadow-premium);
+  }
+  
+  .btn-hero-outline:hover {
+    box-shadow: var(--shadow-glow);
+  }
+  
+  .btn-hero-outline-inner {
+    @apply bg-background text-foreground px-6 py-3 rounded-[10px] font-semibold;
+    @apply hover:bg-gradient-to-r hover:from-primary hover:to-secondary hover:text-white;
+    @apply transition-all duration-300;
+  }
+  
+  /* Premium Card */
+  .card-premium {
+    @apply bg-card/80 backdrop-blur-sm border border-border/50;
+    @apply rounded-2xl p-6 transition-all duration-300 hover:scale-[1.02];
+    box-shadow: var(--shadow-card);
+  }
+  
+  .card-premium:hover {
+    box-shadow: var(--shadow-elevated);
+  }
+  
+  /* Glass Morphism */
+  .glass {
+    @apply bg-white/10 backdrop-blur-md border border-white/20;
+  }
+  
+  /* Gradient Text */
+  .text-gradient {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+  
+  /* Premium Input */
+  .input-premium {
+    @apply bg-background/50 border-2 border-border/50 rounded-xl px-4 py-3;
+    @apply focus:border-primary focus:ring-2 focus:ring-primary/20;
+    @apply transition-all duration-300 outline-none;
+  }
+  
+  /* Floating Action Button */
+  .fab {
+    @apply fixed bottom-6 right-6 w-14 h-14 bg-gradient-to-r from-primary to-secondary;
+    @apply rounded-full shadow-glow hover:scale-110 transition-all duration-300;
+    @apply flex items-center justify-center text-white cursor-pointer z-50;
+  }
+}
+
+/* Custom Animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-20px); }
+}
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 20px hsl(var(--primary) / 0.3); }
+  50% { box-shadow: 0 0 40px hsl(var(--primary) / 0.6); }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in-scale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-glow-pulse {
+  animation: glow-pulse 2s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.6s ease-out forwards;
+}
+
+.animate-fade-in-scale {
+  animation: fade-in-scale 0.5s ease-out forwards;
 }
