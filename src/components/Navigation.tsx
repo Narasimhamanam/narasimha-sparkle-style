@@ -1,23 +1,31 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, User, ShoppingBag, Home, Settings } from "lucide-react";
+import { Menu, X, User, ShoppingBag, Home, Settings, LogOut, LogIn } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAuth } from "@/hooks/useAuth";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const { user, profile, isAdmin, signOut } = useAuth();
 
   const isActive = (path: string) => location.pathname === path;
 
-  const navLinks = [
+  const publicNavLinks = [
     { name: "Home", path: "/", icon: Home },
     { name: "Shop", path: "/shop", icon: ShoppingBag },
+  ];
+
+  const authNavLinks = user ? [] : [
+    { name: "Login", path: "/login", icon: LogIn },
     { name: "Register", path: "/register", icon: User },
   ];
 
-  const adminLinks = [
+  const adminLinks = isAdmin ? [
     { name: "Dashboard", path: "/admin", icon: Settings },
-  ];
+  ] : [];
+
+  const navLinks = [...publicNavLinks, ...authNavLinks];
 
   return (
     <nav className="sticky top-0 z-50 bg-background/80 backdrop-blur-md border-b border-border/50">
@@ -73,11 +81,29 @@ const Navigation = () => {
             })}
           </div>
 
-          {/* CTA Button */}
-          <div className="hidden md:block">
-            <Button className="btn-hero">
-              Shop Now
-            </Button>
+          {/* User Actions */}
+          <div className="hidden md:flex items-center space-x-4">
+            {user ? (
+              <div className="flex items-center space-x-4">
+                <span className="text-sm text-muted-foreground">
+                  Welcome, {profile?.first_name || 'User'}!
+                </span>
+                <Button 
+                  variant="outline" 
+                  onClick={signOut}
+                  className="flex items-center space-x-2"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Sign Out</span>
+                </Button>
+              </div>
+            ) : (
+              <Link to="/login">
+                <Button className="btn-hero">
+                  Get Started
+                </Button>
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -112,9 +138,27 @@ const Navigation = () => {
                 );
               })}
               <div className="pt-4">
-                <Button className="w-full btn-hero">
-                  Shop Now
-                </Button>
+                {user ? (
+                  <div className="space-y-2">
+                    <div className="px-4 py-2 text-sm text-muted-foreground">
+                      Welcome, {profile?.first_name || 'User'}!
+                    </div>
+                    <Button 
+                      onClick={signOut} 
+                      variant="outline" 
+                      className="w-full flex items-center space-x-2"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </Button>
+                  </div>
+                ) : (
+                  <Link to="/login">
+                    <Button className="w-full btn-hero">
+                      Get Started
+                    </Button>
+                  </Link>
+                )}
               </div>
             </div>
           </div>

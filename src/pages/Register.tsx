@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock, User, Phone } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/hooks/useAuth";
 
 const Register = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -20,15 +21,40 @@ const Register = () => {
     agreeToTerms: false,
     subscribeNewsletter: true,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signUp, user } = useAuth();
+
+  // Redirect if already logged in
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle registration logic here
-    console.log("Registration data:", formData);
+    
+    if (formData.password !== formData.confirmPassword) {
+      alert("Passwords don't match!");
+      return;
+    }
+    
+    if (!formData.agreeToTerms) {
+      alert("Please agree to the terms of service!");
+      return;
+    }
+    
+    setIsSubmitting(true);
+    
+    const { error } = await signUp(formData.email, formData.password, {
+      firstName: formData.firstName,
+      lastName: formData.lastName,
+      phone: formData.phone
+    });
+    
+    setIsSubmitting(false);
   };
 
   return (
@@ -192,8 +218,8 @@ const Register = () => {
                 </div>
               </div>
 
-              <Button type="submit" className="w-full btn-hero">
-                Create Account
+              <Button type="submit" className="w-full btn-hero" disabled={isSubmitting}>
+                {isSubmitting ? "Creating Account..." : "Create Account"}
               </Button>
 
               <div className="relative">

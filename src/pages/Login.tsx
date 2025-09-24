@@ -1,11 +1,12 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/hooks/useAuth";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -14,15 +15,29 @@ const Login = () => {
     password: "",
     rememberMe: false,
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { signIn, user } = useAuth();
+
+  // Redirect if already logged in
+  if (user) {
+    return <Navigate to="/" replace />;
+  }
 
   const handleInputChange = (field: string, value: string | boolean) => {
     setFormData({ ...formData, [field]: value });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    // Handle login logic here
-    console.log("Login data:", formData);
+    setIsSubmitting(true);
+    
+    const { error } = await signIn(formData.email, formData.password);
+    
+    if (!error) {
+      // Redirect will happen automatically via useAuth
+    }
+    
+    setIsSubmitting(false);
   };
 
   return (
@@ -101,8 +116,8 @@ const Login = () => {
                 </Link>
               </div>
 
-              <Button type="submit" className="w-full btn-hero">
-                Sign In
+              <Button type="submit" className="w-full btn-hero" disabled={isSubmitting}>
+                {isSubmitting ? "Signing In..." : "Sign In"}
               </Button>
 
               <div className="relative">
