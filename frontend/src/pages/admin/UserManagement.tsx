@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ChevronLeft, Search, Filter, Eye, MessageCircle, Heart, Mail, Phone, MoreVertical } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,96 +8,44 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useToast } from "@/hooks/use-toast";
+import { userService, type UserWithStats } from "@/services/userService";
 
 const UserManagement = () => {
+  const [loading, setLoading] = useState(true);
+  const [users, setUsers] = useState<UserWithStats[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState("all-status");
   const [sortBy, setSortBy] = useState("newest");
+  const { toast } = useToast();
 
-  const users = [
-    {
-      id: 1,
-      name: "Sarah Johnson",
-      email: "sarah.johnson@example.com",
-      phone: "+1 (555) 123-4567",
-      joinDate: "2024-01-15",
-      requestsMade: 8,
-      likesCount: 24,
-      commentsCount: 12,
-      status: "Active",
-      lastActive: "2 hours ago",
-      avatar: "👩‍🦰",
-    },
-    {
-      id: 2,
-      name: "Emily Chen",
-      email: "emily.chen@example.com",
-      phone: "+1 (555) 234-5678",
-      joinDate: "2024-01-14",
-      requestsMade: 12,
-      likesCount: 18,
-      commentsCount: 8,
-      status: "Active",
-      lastActive: "1 day ago",
-      avatar: "👩‍🦱",
-    },
-    {
-      id: 3,
-      name: "Maria Rodriguez",
-      email: "maria.rodriguez@example.com",
-      phone: "+1 (555) 345-6789",
-      joinDate: "2024-01-13",
-      requestsMade: 5,
-      likesCount: 31,
-      commentsCount: 15,
-      status: "Active",
-      lastActive: "3 hours ago",
-      avatar: "👩‍🦳",
-    },
-    {
-      id: 4,
-      name: "Jessica Taylor",
-      email: "jessica.taylor@example.com",
-      phone: "+1 (555) 456-7890",
-      joinDate: "2024-01-12",
-      requestsMade: 3,
-      likesCount: 7,
-      commentsCount: 4,
-      status: "Inactive",
-      lastActive: "1 week ago",
-      avatar: "👩‍🦲",
-    },
-    {
-      id: 5,
-      name: "Amanda Williams",
-      email: "amanda.williams@example.com",
-      phone: "+1 (555) 567-8901",
-      joinDate: "2024-01-11",
-      requestsMade: 15,
-      likesCount: 42,
-      commentsCount: 28,
-      status: "Active",
-      lastActive: "30 minutes ago",
-      avatar: "👩‍💼",
-    },
-    {
-      id: 6,
-      name: "Lisa Brown",
-      email: "lisa.brown@example.com",
-      phone: "+1 (555) 678-9012",
-      joinDate: "2024-01-10",
-      requestsMade: 7,
-      likesCount: 16,
-      commentsCount: 9,
-      status: "Active",
-      lastActive: "5 hours ago",
-      avatar: "👩‍💻",
-    },
-  ];
+  useEffect(() => {
+    loadUsers();
+  }, []);
+
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const usersData = await userService.getAllUsersWithStats();
+      setUsers(usersData);
+    } catch (error) {
+      console.error('Error loading users:', error);
+      toast({
+        variant: "destructive",
+        title: "Error loading users",
+        description: "Could not load user data. Please try again."
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredUsers = users.filter((user) => {
-    const matchesSearch = user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                          user.email.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = 
+      (user.first_name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+      (user.last_name?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false) ||
+      (user.email?.toLowerCase().includes(searchQuery.toLowerCase()) ?? false);
+    
     const matchesStatus = filterStatus === "all-status" || user.status.toLowerCase() === filterStatus.toLowerCase();
     return matchesSearch && matchesStatus;
   });
@@ -105,26 +53,52 @@ const UserManagement = () => {
   const sortedUsers = [...filteredUsers].sort((a, b) => {
     switch (sortBy) {
       case "name":
-        return a.name.localeCompare(b.name);
+        const nameA = `${a.first_name || ''} ${a.last_name || ''}`.trim();
+        const nameB = `${b.first_name || ''} ${b.last_name || ''}`.trim();
+        return nameA.localeCompare(nameB);
       case "requests":
         return b.requestsMade - a.requestsMade;
       case "likes":
         return b.likesCount - a.likesCount;
       case "newest":
-        return new Date(b.joinDate).getTime() - new Date(a.joinDate).getTime();
+        return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
       case "oldest":
-        return new Date(a.joinDate).getTime() - new Date(b.joinDate).getTime();
+        return new Date(a.created_at).getTime() - new Date(b.created_at).getTime();
       default:
         return 0;
     }
   });
 
   const stats = [
-    { title: "Total Users", value: users.length, color: "text-blue-500" },
-    { title: "Active Users", value: users.filter(u => u.status === "Active").length, color: "text-green-500" },
-    { title: "Total Requests", value: users.reduce((sum, u) => sum + u.requestsMade, 0), color: "text-purple-500" },
-    { title: "Total Likes", value: users.reduce((sum, u) => sum + u.likesCount, 0), color: "text-pink-500" },
+    { 
+      title: "Total Users", 
+      value: users.length, 
+      color: "text-blue-500" 
+    },
+    { 
+      title: "Active Users", 
+      value: users.filter(u => u.status === "Active").length, 
+      color: "text-green-500" 
+    },
+    { 
+      title: "Total Requests", 
+      value: users.reduce((sum, u) => sum + u.requestsMade, 0), 
+      color: "text-purple-500" 
+    },
+    { 
+      title: "Total Likes", 
+      value: users.reduce((sum, u) => sum + u.likesCount, 0), 
+      color: "text-pink-500" 
+    },
   ];
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen py-8">
@@ -221,6 +195,7 @@ const UserManagement = () => {
                     <TableHead className="text-center">Requests</TableHead>
                     <TableHead className="text-center">Likes</TableHead>
                     <TableHead className="text-center">Comments</TableHead>
+                    <TableHead>Role</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Last Active</TableHead>
                     <TableHead className="text-center">Actions</TableHead>
@@ -231,10 +206,14 @@ const UserManagement = () => {
                     <TableRow key={user.id} className="hover:bg-muted/50">
                       <TableCell>
                         <div className="flex items-center space-x-3">
-                          <div className="text-2xl">{user.avatar}</div>
+                          <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold">
+                            {user.first_name?.[0]?.toUpperCase() || user.last_name?.[0]?.toUpperCase() || 'U'}
+                          </div>
                           <div>
-                            <p className="font-semibold">{user.name}</p>
-                            <p className="text-sm text-muted-foreground">ID: {user.id}</p>
+                            <p className="font-semibold">
+                              {user.first_name || ''} {user.last_name || ''}
+                            </p>
+                            <p className="text-sm text-muted-foreground">ID: {user.id.slice(0, 8)}...</p>
                           </div>
                         </div>
                       </TableCell>
@@ -242,15 +221,17 @@ const UserManagement = () => {
                         <div className="space-y-1">
                           <div className="flex items-center text-sm">
                             <Mail className="w-3 h-3 mr-1" />
-                            {user.email}
+                            {user.email || 'N/A'}
                           </div>
                           <div className="flex items-center text-sm text-muted-foreground">
                             <Phone className="w-3 h-3 mr-1" />
-                            {user.phone}
+                            {user.phone || 'N/A'}
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell className="text-sm">{user.joinDate}</TableCell>
+                      <TableCell className="text-sm">
+                        {new Date(user.created_at).toLocaleDateString()}
+                      </TableCell>
                       <TableCell className="text-center">
                         <Badge variant="outline" className="text-purple-600">
                           {user.requestsMade}
@@ -269,9 +250,13 @@ const UserManagement = () => {
                         </Badge>
                       </TableCell>
                       <TableCell>
+                        <Badge variant={user.role === 'admin' ? 'default' : 'secondary'}>
+                          {user.role}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
                         <Badge 
                           variant={user.status === "Active" ? "default" : "secondary"}
-                          support-extra-content
                         >
                           {user.status}
                         </Badge>
@@ -295,9 +280,11 @@ const UserManagement = () => {
                               <Mail className="w-4 h-4 mr-2" />
                               Send Message
                             </DropdownMenuItem>
-                            <DropdownMenuItem className="text-red-600">
-                              Block User
-                            </DropdownMenuItem>
+                            {user.role !== 'admin' && (
+                              <DropdownMenuItem className="text-red-600">
+                                Block User
+                              </DropdownMenuItem>
+                            )}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -312,7 +299,10 @@ const UserManagement = () => {
                 <div className="text-6xl mb-4">👤</div>
                 <h3 className="text-2xl font-bold mb-2">No users found</h3>
                 <p className="text-muted-foreground">
-                  Try adjusting your search or filter criteria
+                  {searchQuery || filterStatus !== "all-status"
+                    ? "Try adjusting your search or filter criteria"
+                    : "No users have registered yet."
+                  }
                 </p>
               </div>
             )}
