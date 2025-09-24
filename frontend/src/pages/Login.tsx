@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, Navigate, useNavigate, useLocation } from "react-router-dom";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,11 +16,50 @@ const Login = () => {
     rememberMe: false,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { signIn, user } = useAuth();
+  const { signIn, user, isAdmin, loading } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
 
-  // Redirect if already logged in
+  // Get the redirect path from navigation state
+  const from = location.state?.from?.pathname || "/";
+
+  // Redirect logic after successful login
+  useEffect(() => {
+    if (user && !loading) {
+      console.log('User logged in, redirecting...', { user: user.email, isAdmin, from });
+      
+      // If user is admin and came from admin route, go to admin
+      if (isAdmin && from.startsWith('/admin')) {
+        navigate(from, { replace: true });
+      }
+      // If user is admin but came from regular route, go to admin dashboard  
+      else if (isAdmin) {
+        navigate('/admin', { replace: true });
+      }
+      // Regular user goes to intended destination or home
+      else {
+        navigate(from, { replace: true });
+      }
+    }
+  }, [user, isAdmin, loading, navigate, from]);
+
+  // Show loading while auth state is being determined
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  // Don't redirect immediately if already logged in - let useEffect handle it
+  // This prevents redirect loops
   if (user) {
-    return <Navigate to="/" replace />;
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-primary"></div>
+      </div>
+    );
   }
 
   const handleInputChange = (field: string, value: string | boolean) => {
@@ -29,15 +68,25 @@ const Login = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (!formData.email || !formData.password) {
+      return;
+    }
+
     setIsSubmitting(true);
     
-    const { error } = await signIn(formData.email, formData.password);
-    
-    if (!error) {
-      // Redirect will happen automatically via useAuth
+    try {
+      const { error } = await signIn(formData.email, formData.password);
+      
+      if (!error) {
+        // Success - redirect will be handled by useEffect
+        console.log('Login successful, waiting for redirect...');
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+    } finally {
+      setIsSubmitting(false);
     }
-    
-    setIsSubmitting(false);
   };
 
   return (
@@ -70,6 +119,7 @@ const Login = () => {
                     onChange={(e) => handleInputChange("email", e.target.value)}
                     className="input-premium pl-10"
                     required
+                    disabled={isSubmitting}
                   />
                 </div>
               </div>
@@ -86,11 +136,13 @@ const Login = () => {
                     onChange={(e) => handleInputChange("password", e.target.value)}
                     className="input-premium pl-10 pr-10"
                     required
+                    disabled={isSubmitting}
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-1/2 transform -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    disabled={isSubmitting}
                   >
                     {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                   </button>
@@ -103,6 +155,7 @@ const Login = () => {
                     id="rememberMe"
                     checked={formData.rememberMe}
                     onCheckedChange={(checked) => handleInputChange("rememberMe", checked)}
+                    disabled={isSubmitting}
                   />
                   <Label htmlFor="rememberMe" className="text-sm">
                     Remember me
@@ -134,6 +187,7 @@ const Login = () => {
                 variant="outline"
                 className="w-full"
                 onClick={() => console.log("Google login")}
+                disabled={isSubmitting}
               >
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                   <path
@@ -167,6 +221,19 @@ const Login = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* Admin Test Credentials Note */}
+        <div className="mt-4 p-4 bg-muted/30 rounded-lg text-center">
+          <p className="text-sm text-muted-foreground mb-2">
+            <strong>Admin Test Credentials:</strong>
+          </p>
+          <p className="text-xs font-mono bg-background px-2 py-1 rounded">
+            narasimhamanam.ai@gmail.com
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            (Setup required in Supabase dashboard)
+          </p>
+        </div>
       </div>
     </div>
   );
