@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, Upload, X, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +8,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { useToast } from "@/hooks/use-toast";
+import { dressService } from "@/services/dressService";
 
 const AddDress = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
     price: "",
@@ -66,10 +71,96 @@ const AddDress = () => {
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+
+    try {
+      setLoading(true);
+      const imageUrls = await dressService.processImages(files);
+      setFormData(prev => ({
+        ...prev,
+        images: [...prev.images, ...imageUrls]
+      }));
+      
+      toast({
+        title: "Images uploaded successfully",
+        description: `${files.length} image(s) have been processed.`
+      });
+    } catch (error) {
+      console.error('Error processing images:', error);
+      toast({
+        variant: "destructive",
+        title: "Upload failed",
+        description: "Could not process the images. Please try again."
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("Dress data:", formData);
-    // Handle form submission
+    
+    if (!formData.name || !formData.price || !formData.category || !formData.description) {
+      toast({
+        variant: "destructive",
+        title: "Missing required fields",
+        description: "Please fill in all required fields."
+      });
+      return;
+    }
+
+    if (formData.sizes.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No sizes selected",
+        description: "Please select at least one size."
+      });
+      return;
+    }
+
+    if (formData.colors.length === 0) {
+      toast({
+        variant: "destructive",
+        title: "No colors selected",
+        description: "Please select at least one color."
+      });
+      return;
+    }
+
+    try {
+      setLoading(true);
+      
+      const dressData = {
+        name: formData.name,
+        price: parseFloat(formData.price),
+        category: formData.category,
+        description: formData.description,
+        features: formData.features,
+        sizes: formData.sizes,
+        colors: formData.colors,
+        images: formData.images,
+      };
+
+      await dressService.createDress(dressData);
+      
+      toast({
+        title: "Dress added successfully!",
+        description: `${formData.name} has been added to your collection.`
+      });
+
+      navigate('/admin');
+    } catch (error) {
+      console.error('Error creating dress:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to add dress",
+        description: "There was an error adding the dress. Please try again."
+      });
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -101,7 +192,7 @@ const AddDress = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
-                  <Label htmlFor="name">Dress Name</Label>
+                  <Label htmlFor="name">Dress Name *</Label>
                   <Input
                     id="name"
                     placeholder="e.g., Elegant Evening Gown"
@@ -113,11 +204,12 @@ const AddDress = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="price">Price ($)</Label>
+                  <Label htmlFor="price">Price ($) *</Label>
                   <Input
                     id="price"
                     type="number"
-                    placeholder="299"
+                    step="0.01"
+                    placeholder="299.00"
                     value={formData.price}
                     onChange={(e) => handleInputChange("price", e.target.value)}
                     className="input-premium"
@@ -126,7 +218,7 @@ const AddDress = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="category">Category</Label>
+                  <Label htmlFor="category">Category *</Label>
                   <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
                     <SelectTrigger className="input-premium">
                       <SelectValue placeholder="Select category" />
@@ -142,7 +234,7 @@ const AddDress = () => {
                 </div>
 
                 <div>
-                  <Label htmlFor="description">Description</Label>
+                  <Label htmlFor="description">Description *</Label>
                   <Textarea
                     id="description"
                     placeholder="Describe the dress, its features, and what makes it special..."
@@ -166,13 +258,26 @@ const AddDress = () => {
                   <Upload className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
                   <h3 className="text-lg font-semibold mb-2">Upload Images</h3>
                   <p className="text-muted-foreground mb-4">
-                    Drag and drop images here, or click to browse
+                    Select multiple images to upload (JPG, PNG, WebP)
                   </p>
-                  <Button type="button" variant="outline">
-                    Choose Files
-                  </Button>
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={handleImageUpload}
+                    className="hidden"
+                    id="image-upload"
+                    disabled={loading}
+                  />
+                  <Label htmlFor="image-upload">
+                    <Button type="button" variant="outline" asChild>
+                      <span className="cursor-pointer">
+                        {loading ? "Processing..." : "Choose Files"}
+                      </span>
+                    </Button>
+                  </Label>
                   <p className="text-xs text-muted-foreground mt-2">
-                    Recommended: 800x1000px, JPG or PNG, max 5MB each
+                    Images will be converted to base64 format for storage
                   </p>
                 </div>
 
@@ -258,7 +363,7 @@ const AddDress = () => {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             <Card className="card-premium">
               <CardHeader>
-                <CardTitle>Available Sizes</CardTitle>
+                <CardTitle>Available Sizes *</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-3 gap-3">
@@ -274,12 +379,15 @@ const AddDress = () => {
                     </Button>
                   ))}
                 </div>
+                {formData.sizes.length === 0 && (
+                  <p className="text-sm text-red-500 mt-2">Please select at least one size</p>
+                )}
               </CardContent>
             </Card>
 
             <Card className="card-premium">
               <CardHeader>
-                <CardTitle>Available Colors</CardTitle>
+                <CardTitle>Available Colors *</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex flex-wrap gap-2">
@@ -345,6 +453,9 @@ const AddDress = () => {
                     </Badge>
                   ))}
                 </div>
+                {formData.colors.length === 0 && (
+                  <p className="text-sm text-red-500">Please select at least one color</p>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -357,21 +468,49 @@ const AddDress = () => {
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="bg-muted/50 rounded-lg p-4 aspect-square flex items-center justify-center">
-                  <div className="text-center text-muted-foreground">
-                    <Upload className="w-12 h-12 mx-auto mb-2" />
-                    <p>Main image preview</p>
-                  </div>
+                  {formData.images.length > 0 ? (
+                    <img
+                      src={formData.images[0]}
+                      alt="Preview"
+                      className="w-full h-full object-cover rounded-lg"
+                    />
+                  ) : (
+                    <div className="text-center text-muted-foreground">
+                      <Upload className="w-12 h-12 mx-auto mb-2" />
+                      <p>Main image preview</p>
+                    </div>
+                  )}
                 </div>
                 <div className="space-y-4">
                   <h3 className="text-xl font-bold">{formData.name || "Dress Name"}</h3>
                   <p className="text-2xl font-bold text-gradient">
-                    ${formData.price || "0"}
+                    ${formData.price || "0.00"}
                   </p>
                   <p className="text-muted-foreground">
                     {formData.description || "Dress description will appear here..."}
                   </p>
                   {formData.category && (
                     <Badge>{formData.category}</Badge>
+                  )}
+                  {formData.sizes.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium mb-1">Sizes:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {formData.sizes.map(size => (
+                          <Badge key={size} variant="outline">{size}</Badge>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {formData.colors.length > 0 && (
+                    <div>
+                      <p className="text-sm font-medium mb-1">Colors:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {formData.colors.map(color => (
+                          <Badge key={color} variant="outline">{color}</Badge>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -381,10 +520,10 @@ const AddDress = () => {
           {/* Submit Buttons */}
           <div className="flex justify-end space-x-4">
             <Link to="/admin">
-              <Button variant="outline">Cancel</Button>
+              <Button variant="outline" disabled={loading}>Cancel</Button>
             </Link>
-            <Button type="submit" className="btn-hero">
-              Add Dress to Collection
+            <Button type="submit" className="btn-hero" disabled={loading}>
+              {loading ? "Adding Dress..." : "Add Dress to Collection"}
             </Button>
           </div>
         </form>
